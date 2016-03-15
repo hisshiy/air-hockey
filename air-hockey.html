@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<script>
+var canvas;
+var cc;
+var r=20;//半径
+var interval=0.01;//描画間隔：10ms
+var timer;//タイマ
+var x=600;//ボールのｘ座標
+var y=100;//ボールのｙ座標
+var barX=100;//バーのｘ座標
+var barY=200;//バーのｙ座標
+var barX2=1100;//バー2のｘ座標
+var barY2=200;//バー2のｙ座標
+var dx=1.0;//x方向の移動量
+var dy=1.0;//y方向の移動量
+var g=1.0;//重力加速度 px/s^2
+var plus=1.01;//加速
+var count=0;//クリックカウント
+var drag=false;
+var leftCount=0;
+var rightCount=0;
+var gameTimer;
+var gameTime=20;//ゲーム時間10s
+var barHeight=60;//バーの縦幅
+var barWidth=5;//バーの横幅
+var down=0;//キーボード操作用
+var up=0;//キーボード操作用
+var counta=0;
+var rand = Math.floor( Math.random() * 3 ) ;
+var rand2 = Math.floor( Math.random() * 3 ) ;
+var rand3 = Math.floor( Math.random() * 4 ) ;
+var rand4 = Math.floor( Math.random() * 3 ) ;
+
+	function init(){
+		canvas = document.getElementById("canvas");
+		cc = canvas.getContext("2d");
+		//描画関数を一定間隔で繰り返し呼び出す
+		//canvas.addEventListener('click', onMouseClick, false);
+		canvas.addEventListener("mousemove", onMouseMove,false);
+		canvas.addEventListener("mousedown", onMouseDown,false);
+		canvas.addEventListener("mouseup", onMouseUp, false);
+		canvas.addEventListener("mouseout", onMouseOut, false);
+		timer=setInterval(draw,interval*1000);
+	}
+	//キーボード操作 左バー/////////////////////////////////////////
+	document.onkeydown = barmove;
+	function barmove(){
+	if (event.keyCode == 38)  //「上」が押されたか確認
+	{
+		barY2 -= 30;
+	}
+		if (event.keyCode == 40)  //「下」が押されたか確認
+	{
+		barY2 += 30;
+	}
+	if (event.keyCode == 32)  //「下」が押されたか確認
+	{
+		if(counta==0){
+			dx+=rand;
+			dy+=rand2;
+			dx-=rand3;
+			dy-=rand4;
+		}
+		counta=1;
+	}
+		if(barY2<20){
+			barY2=10;
+		}
+		if(barY2>330){
+			barY2=330;
+		}
+}
+	//描画
+	function draw(){
+		//canvasのクリア
+		cc.clearRect(0,0,canvas.width,canvas.height);
+		//●の描画
+		drawCircle(x,y);
+		//枠の描画
+		drawWaku();
+		//バーの描画
+		drawRect(barX,barY);
+		//バー2の描画
+		drawRect2(barX2,barY2);
+		//座標更新
+		updateCoordinate();
+	}
+	//枠の描画
+	function drawWaku(){
+		cc.save();
+		cc.rect(0,0,canvas.width,canvas.height);
+		cc.strokeStyle = "black"
+		cc.lineWidth = 15;
+		cc.stroke();
+	}
+	//ボールの描画
+	function drawCircle(x,y){
+		cc.save();
+		cc.beginPath();
+		cc.arc(x,y,r,0,Math.PI*2,true);
+		cc.closePath();
+		cc.fill();
+		cc.restore();
+	}
+	//左バーの描画
+	function drawRect(barX,barY){
+		cc.save();
+		cc.beginPath();
+		cc.fillRect(barX,barY,5,60);
+		cc.closePath();
+		cc.fill();
+		cc.restore();
+	}
+	//右バーの描画
+	function drawRect2(barX2,barY2){
+		cc.save();
+		cc.beginPath();
+		cc.fillRect(barX2,barY2,5,60);
+		cc.closePath();
+		cc.fill();
+		cc.restore();
+	}
+	function updateCoordinate(){
+		if(drag)return;
+		//移動量更新(壁で反射)
+		if((x+dx>canvas.width-r) || (x+dx<r)){
+			var xAbs = Math.abs(dx);
+			dx=(dx*-1)*plus;
+			if(dx<0){
+			leftCount += 1;
+			counta=0;
+			x=600;
+			y=200;
+			document.getElementById("info").innerHTML=leftCount;
+				if(leftCount==5){
+					gameOver();
+					document.getElementById("info3").innerHTML="左プレイヤーの勝ち！";
+				}
+			}
+			if(dx>0){
+			rightCount += 1;
+			counta=0;
+			x=600;
+			y=200;
+			document.getElementById("info2").innerHTML=rightCount;
+				if(rightCount==5){
+					gameOver();
+					document.getElementById("info3").innerHTML="右プレイヤーの勝ち！";
+				}
+			}
+		}
+		if((y+dy>canvas.height-r) || (y+dy<r)){
+			var yAbs = Math.abs(dy);
+			dy=(dy*-1)*plus;
+		}
+		if((Math.abs(barX-x)< barWidth+ r/2)&&(Math.abs(barY-y)< barHeight/2 + r/2)){
+			dx=(dx*-1)*plus;
+		}
+		if((Math.abs(barX2-x)< barWidth+ r/2)&&(Math.abs(barY2-y)< barHeight/2 + r/2)){
+			dx=(dx*-1)*plus;
+		}
+		if(counta==1){
+		//移動
+		x=x+dx;
+		y=y+dy;
+		}
+	}
+	function onMouseClick(e){
+		//座標取得
+		var mx = e.clientX - canvas.offsetLeft;
+		var my = e.clientY - canvas.offsetTop;
+	}
+	function onMouseMove(e){
+		var my = e.clientY - canvas.offsetTop;
+		barY=my;
+		//バーの移動制限
+		if(barY<20){
+			barY=10;
+		}
+		if(barY>330){
+			barY=330;
+		}
+		if(!drag)return;
+		var mx = e.clientX -
+		canvas.offsetLeft;
+		var my = e.clientY - canvas.offsetTop;
+		//移動量の更新
+		dx=mx-x;
+		dy=my-y;
+		x=mx;
+		y=my;
+		barY=dy;
+		barY2=dy;
+	}
+	function onMouseDown(e){
+		var mx = e.clientX - canvas.offsetLeft;
+		var my = e.clientY - canvas.offsetTop;
+		if(clickCircle(mx,my)){
+			drag=true;
+			x=mx;
+			y=my;
+			dx=0;
+			dy=0;
+		}
+	}
+	function onMouseUp(e){
+		drag=false;
+	}
+	function onMouseOut(e){
+		drag=false;
+	}
+	function gameOver(){
+		//アニメーションの停止
+		clearInterval(timer);
+		//マウス操作イベントも停止
+		canvas.removeEventListener("mousemove", onMouseMove, false);
+		canvas.removeEventListener("mousedown", onMouseDown, false);
+		canvas.removeEventListener("mouseup", onMouseUp, false);
+		canvas.removeEventListener("mouseout", onMouseOut, false);
+		
+	}
+</script>
+</head>
+<body onload="init()">
+<div id="gametimer"></div>
+<div><canvas id ="canvas" width="1200" height="400"/></div>
+<h3>左プレイヤー:マウス 右プレイヤー:上下キー スペースキーでスタート ５点先取</h3>
+<h1>右得点↓</h1><h1 id="info2"/>
+<h1>左得点↓</h1><h1 id="info"/>
+<h1 id="info3"/>
+</body>
+</html>
